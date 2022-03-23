@@ -1,0 +1,56 @@
+{
+	"sharedDir": "shared",
+	"dependenciesDir": "extern",
+	"info": {
+		"name": "Nya",
+		"id": "Nya",
+		"version": "0.1.0",
+		"url": null,
+		"additionalData": {
+			"overrideSoName": "libNya.so"
+		}
+	},
+	"dependencies": [
+		{
+			"id": "beatsaber-hook",
+			"versionRange": "3.6.8",
+			"additionalData": {
+				"extraFiles": [
+					"src/inline-hook"
+				]
+			}
+		},
+		{
+			"id": "modloader",
+			"versionRange": "=1.2.3",
+			"additionalData": {
+				
+			}
+		},
+		    {
+			"id": "custom-types",
+			"versionRange": "*",
+			"additionalData": {}
+		},
+		    {
+			"id": "codegen",
+			"versionRange": "*",
+			"additionalData": {}
+		},
+		    {
+			"id": "questui",
+			"versionRange": "*",
+			"additionalData": {}
+		},
+		    {
+			"id": "libcurl",
+			"versionRange": "*",
+			"additionalData": {
+			"private": true
+			}
+		}
+	],
+	"additionalData": {
+		
+	}
+}
