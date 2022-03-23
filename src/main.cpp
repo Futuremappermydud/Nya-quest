@@ -31,6 +31,6 @@ extern "C" void load() {
 
     QuestUI::Init();
 
-    QuestUI::Register::RegisterGameplaySetupMenu<Nya::NyqMenu*>(modInfo, "Nya");
+    QuestUI::Register::RegisterGameplaySetupMenu<Nya::ModifiersMenu*>(modInfo, "Nya");
 
 }
