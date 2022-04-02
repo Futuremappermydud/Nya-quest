@@ -1,0 +1,6 @@
+# Exclude generated files
+build/
+extern/
+extern.cmake
+qpm_defines.cmake
+qpm.shared.json
