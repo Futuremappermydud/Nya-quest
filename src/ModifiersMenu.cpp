@@ -20,12 +20,18 @@ std::string get_api_path() {
     // Get all config parametes
     std::string API = getModConfig().API.GetValue();
     std::string SFWEndpoint = getModConfig().SFWEndpoint.GetValue();
-    std::string NSFWEndpoint = getModConfig().NSFWEndpoint.GetValue();
-    bool NSFWEnabled = getModConfig().NSFWEnabled.GetValue();
+    
+    #ifdef NSFW
+        std::string NSFWEndpoint = getModConfig().NSFWEndpoint.GetValue();
+        bool NSFWEnabled = getModConfig().NSFWEnabled.GetValue();
+    #else
+        bool NSFWEnabled = false;
+        std::string NSFWEndpoint = "";
+    #endif
 
     if (API == "waifu.pics") {
         std::string url = "https://api.waifu.pics/";
-        url += NSFWEnabled? "nsfw/": "sfw/";
+        url += NSFWEnabled? "nsfw/": "sfw/";        
 
         if (NSFWEnabled) {
             url += NSFWEndpoint;
@@ -148,6 +154,7 @@ void Nya::ModifiersMenu::DidActivate(bool firstActivation)
                  
                 });
 
+                #ifdef NSFW
                 // NSFW endpoint selector
                 std::string NSFWEndpoint = getModConfig().NSFWEndpoint.GetValue();
                 QuestUI::BeatSaberUI::CreateDropdown(vert->get_transform(), to_utf16("NSFW endpoint"), NSFWEndpoint, nsfw_endpoints, [](StringW value){
@@ -159,6 +166,7 @@ void Nya::ModifiersMenu::DidActivate(bool firstActivation)
                 QuestUI::BeatSaberUI::CreateToggle(vert->get_transform(),  to_utf16("NSFW toggle"), NSFWEnabled,  [](bool isChecked){ 
                     getModConfig().NSFWEnabled.SetValue(isChecked);
                 });
+                #endif
 
                 UnityEngine::UI::HorizontalLayoutGroup* horz = QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(vert->get_transform());
                 horz->GetComponent<UnityEngine::UI::ContentSizeFitter*>()->set_verticalFit(UnityEngine::UI::ContentSizeFitter::FitMode::PreferredSize);
