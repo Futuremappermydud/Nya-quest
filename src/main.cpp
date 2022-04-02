@@ -1,6 +1,9 @@
 #include "main.hpp"
 #include "ModifiersMenu.hpp"
+#include "ModConfig.hpp"
 #include "questui/shared/QuestUI.hpp"
+
+DEFINE_CONFIG(ModConfig);
 
 // Loads the config from disk using our modInfo, then returns it for use
 Configuration& getConfig() {
@@ -28,6 +31,9 @@ extern "C" void setup(ModInfo& info) {
 // Called later on in the game loading - a good time to install function hooks
 extern "C" void load() {
     il2cpp_functions::Init();
+
+    // Load the config - make sure this is after il2cpp_functions::Init();
+    getModConfig().Init(modInfo);
 
     QuestUI::Init();
 
