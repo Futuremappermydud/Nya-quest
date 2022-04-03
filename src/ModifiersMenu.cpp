@@ -103,12 +103,11 @@ void Nya::ModifiersMenu::DidActivate(bool firstActivation)
                                 {
                                     case 200:
                                         getLogger().debug("Les go!");
-                                        auto arr = il2cpp_utils::vectorToArray(bytes);
-                                        QuestUI::MainThreadScheduler::Schedule([this, arr]
+                                        QuestUI::MainThreadScheduler::Schedule([this, bytes]
                                         {
                                             Destroy(this->NYA->get_sprite()->get_texture());
                                             Destroy(this->NYA->get_sprite());
-                                            this->NYA->set_sprite(QuestUI::BeatSaberUI::ArrayToSprite(arr));
+                                            this->NYA->set_sprite(QuestUI::BeatSaberUI::VectorToSprite(bytes));
                                             this->nyaButton->set_interactable(true);
                                         });
                                         getLogger().debug("Les go! x2");
@@ -205,10 +204,9 @@ void Nya::ModifiersMenu::DidActivate(bool firstActivation)
                     {
                         case 200:
                             getLogger().debug("Les go!");
-                            auto arr = il2cpp_utils::vectorToArray(*result.get());
-                            QuestUI::MainThreadScheduler::Schedule([this, arr]
+                            QuestUI::MainThreadScheduler::Schedule([this, result]
                             {
-                                this->NYA->set_sprite(QuestUI::BeatSaberUI::ArrayToSprite(arr));
+                                this->NYA->set_sprite(QuestUI::BeatSaberUI::VectorToSprite(*result.get()));
                                 this->nyaButton->set_interactable(true);
                             });
                             getLogger().debug("Les go! x2");
