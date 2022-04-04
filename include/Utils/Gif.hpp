@@ -128,7 +128,7 @@ struct Gif
         int width = get_width();
         int height = get_height();
 
-        ::ArrayW<UnityEngine::Texture2D*> frames = new ArrayW<UnityEngine::Texture2D*>(length+1);
+        ::ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(length+1);
 
         // Basic texture
         UnityEngine::Texture2D* sampleTexture = UnityEngine::Texture2D::New_ctor(width, height);

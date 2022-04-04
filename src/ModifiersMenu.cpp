@@ -122,8 +122,7 @@ void Nya::ModifiersMenu::DidActivate(bool firstActivation)
                                                     std::string resCopy = result;
 
                                                     getLogger().debug("Rendering the gif!");
-                                                    Destroy(this->NYA->get_sprite()->get_texture());
-                                                    Destroy(this->NYA->get_sprite());
+                                                    
                                                 
                                                     
 
@@ -157,6 +156,8 @@ void Nya::ModifiersMenu::DidActivate(bool firstActivation)
                                                         auto sprite = Sprite::Create(frames.get(1),
                                                         Rect(0.0f, 0.0f, (float)width, (float)height),
                                                         Vector2(0.5f, 0.5f), 1024.0f, 1u, SpriteMeshType::FullRect, Vector4(0.0f, 0.0f, 0.0f, 0.0f), false);
+                                                        Destroy(this->NYA->get_sprite()->get_texture());
+                                                        Destroy(this->NYA->get_sprite());
                                                         this->NYA->set_sprite(sprite);
                                                     }
                                                 });
