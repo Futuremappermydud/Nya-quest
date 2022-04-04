@@ -1,6 +1,6 @@
 // this file is mostly just copied from https://github.com/darknight1050/SongDownloader/blob/master/src/Utils/WebUtils.cpp,
 // all credit for it goes to darknight1050 unless other credit is given
-#include "WebUtils.hpp"
+#include "Utils/WebUtils.hpp"
 #include "main.hpp"
 #include "beatsaber-hook/shared/utils/logging.hpp"
 

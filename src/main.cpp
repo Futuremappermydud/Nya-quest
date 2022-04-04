@@ -39,4 +39,5 @@ extern "C" void load() {
 
     QuestUI::Register::RegisterGameplaySetupMenu<Nya::ModifiersMenu*>(modInfo, "Nya");
 
+    custom_types::Register::AutoRegister();
 }

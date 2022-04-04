@@ -1,6 +1,7 @@
 #define RAPIDJSON_HAS_STDSTRING 1
 #include "ModifiersMenu.hpp"
-#include "WebUtils.hpp"
+#include "Utils/WebUtils.hpp"
+#include "ImageView.hpp"
 #include "ModConfig.hpp"
 #include "beatsaber-hook/shared/utils/typedefs.h"
 #include "UnityEngine/Resources.hpp"
@@ -9,6 +10,9 @@
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 #include "System/IO/File.hpp"
+#include "Utils/Gif.hpp"
+#include "UnityEngine/Sprite.hpp"
+#include "UnityEngine/SpriteMeshType.hpp"
 
 using namespace UnityEngine;
 
@@ -67,6 +71,7 @@ void Nya::ModifiersMenu::DidActivate(bool firstActivation)
         NYA = QuestUI::BeatSaberUI::CreateImage(vert->get_transform(), nullptr, Vector2::get_zero(), Vector2(50, 50));
         NYA->set_preserveAspect(true);
         auto ele = NYA->get_gameObject()->AddComponent<UnityEngine::UI::LayoutElement*>();
+        auto view = NYA->get_gameObject()->AddComponent<Nya::ImageView*>();
         ele->set_preferredHeight(50);
         ele->set_preferredWidth(50);
 
@@ -94,24 +99,92 @@ void Nya::ModifiersMenu::DidActivate(bool firstActivation)
                             }
                             getLogger().debug("%s", url.c_str());
 
-                            WebUtils::GetAsync(url, 10.0, [this](long code, std::string result){
+                            WebUtils::GetAsync(url, 10.0, [this, url](long code, std::string result){
                                 std::vector<uint8_t> bytes(result.begin(), result.end());
-
+                                
                                 getLogger().debug("Downloaded Image!");
                                 getLogger().debug("%lu", bytes.size());
                                 switch (code)
                                 {
                                     case 200:
-                                        getLogger().debug("Les go!");
-                                        QuestUI::MainThreadScheduler::Schedule([this, bytes]
+                                        if(url.find(".gif") != std::string::npos) {
+                                            getLogger().debug("Found a gif");
+                                            
+                                            // getLogger().debug("Gif height is: %d",);
+                                            // Parse the gif
+                                            
+
+                                            // UnityEngine::Texture2D* frame = gif.get_frame(1);
+
+                                            // if (frame  != nullptr) {
+                                                QuestUI::MainThreadScheduler::Schedule([this, result]
+                                                {
+                                                    std::string resCopy = result;
+
+                                                    getLogger().debug("Rendering the gif!");
+                                                    Destroy(this->NYA->get_sprite()->get_texture());
+                                                    Destroy(this->NYA->get_sprite());
+                                                
+                                                    
+
+                                                    Gif gif(resCopy);
+                                                    // 0 - success
+                                                    int parseResult = gif.Parse();
+                                                    getLogger().debug("Gif parse result: %d", parseResult);
+                                                    // slurp 1 - success
+                                                    int slurpResult = gif.Slurp();
+                                                    getLogger().debug("Gif slurp result: %d", slurpResult);
+
+                                                    getLogger().debug("Gif length is: %d", gif.get_length());
+                                                    getLogger().debug("Gif height is: %d", gif.get_height());
+                                                    int width = gif.get_width();
+                                                    int height = gif.get_height();
+                                                    int length = gif.get_length();
+                                                    ArrayW<UnityEngine::Texture2D*> frames = gif.get_all_frames();
+                                                    getLogger().debug("Got frames");
+                                                    for (int idx = 1; idx <= length; idx++) {
+                                                        if (frames[idx-1] == nullptr) {
+                                                            getLogger().debug("%d null", idx-1);
+                                                        } else {
+                                                            getLogger().debug("%d not null", idx-1);
+                                                        }
+                                                    }
+                                                    if (frames[1] == nullptr) {
+                                                        getLogger().debug("First frame is null");
+                                                    } else {
+                                                        getLogger().debug("First frame is not null");
+
+                                                        auto sprite = Sprite::Create(frames.get(1),
+                                                        Rect(0.0f, 0.0f, (float)width, (float)height),
+                                                        Vector2(0.5f, 0.5f), 1024.0f, 1u, SpriteMeshType::FullRect, Vector4(0.0f, 0.0f, 0.0f, 0.0f), false);
+                                                        this->NYA->set_sprite(sprite);
+                                                    }
+                                                });
+                                            // }   else {
+                                            //     getLogger().debug("Got the null pointer gif!");
+                                            // }
+
+                                           
+                                            // UnityEngine::Sprite::Create(gif.get_frame(1), UnityEngine::Rect(0,0, gif.get_width(),  gif.get_height()), )
+
+                                        } else {
+                                            getLogger().debug("Les go!");
+                                            QuestUI::MainThreadScheduler::Schedule([this, bytes]
+                                            {
+                                                Destroy(this->NYA->get_sprite()->get_texture());
+                                                Destroy(this->NYA->get_sprite());
+                                                this->NYA->set_sprite(QuestUI::BeatSaberUI::VectorToSprite(bytes));
+                                            });
+                                            getLogger().debug("Les go! x2");
+                                            //delete arr;
+                                        }
+
+                                        QuestUI::MainThreadScheduler::Schedule([this]
                                         {
-                                            Destroy(this->NYA->get_sprite()->get_texture());
-                                            Destroy(this->NYA->get_sprite());
-                                            this->NYA->set_sprite(QuestUI::BeatSaberUI::VectorToSprite(bytes));
                                             this->nyaButton->set_interactable(true);
                                         });
-                                        getLogger().debug("Les go! x2");
-                                        //delete arr;
+                                    
+                                       
 
                                 }
                             });
