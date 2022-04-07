@@ -5,6 +5,10 @@
 #include "UnityEngine/Texture2D.hpp"
 #include "UnityEngine/Color32.hpp"
 
+struct AllFramesResult {
+    ArrayW<UnityEngine::Texture2D*>  frames;
+    ArrayW<float> timings;
+};
 struct Gif
 {
     Gif(std::string& text) : data(text), datastream(&this->data){};
@@ -116,32 +120,43 @@ struct Gif
         texture->Apply();
         return texture;
     }
-
+    
 /// @brief gets the frame @ idx
     /// @return texture2d or nullptr on fail
-    ::ArrayW<UnityEngine::Texture2D*> get_all_frames()
+    AllFramesResult get_all_frames()
     {
        
+        // Not sure if it helps but everything works
+        const char * GifVersion = DGifGetGifVersion(gif);
+        getLogger().debug("Gif Version: %d", *(GifVersion));
         int length = get_length();
-        if (!gif || length == 0) return nullptr;
+        if (!gif || length == 0) return {
+            nullptr, nullptr
+        };
 
         int width = get_width();
         int height = get_height();
-
-        ::ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(length+1);
+        
+        ::ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(length);
+        ArrayW<float> timings = ArrayW<float> (length);
 
         // Basic texture
         UnityEngine::Texture2D* sampleTexture = UnityEngine::Texture2D::New_ctor(width, height);
         ::ArrayW<::UnityEngine::Color32> pixelData = sampleTexture->GetPixels32();
         UnityEngine::Object::Destroy(sampleTexture);
         // IDX <= length
-        for (int idx = 1; idx <= length; idx++) {
-            getLogger().debug("Processing frame: %d", idx);
-            GifColorType* color;
-            SavedImage* frame;
-            ExtensionBlock* ext = 0;
-            GifImageDesc* frameInfo;
-            ColorMapObject* colorMap;
+
+        // Persist data from the previous frame
+        GifColorType* color;
+        SavedImage* frame;
+        ExtensionBlock* ext = nullptr;
+        GifImageDesc* frameInfo;
+        ColorMapObject* colorMap;
+        // Graphic control ext block
+        GraphicsControlBlock GCB;
+        int GCBResult = GIF_ERROR;
+
+        for (int idx = 0; idx < length; idx++) {
             int x, y, j, loc;
 
             frame = &(gif->SavedImages[idx]);
@@ -163,8 +178,13 @@ struct Gif
                 }
             }
         
+
+            // Get additional info about the frame
+            if (ext != nullptr) {
+                GCBResult = DGifExtensionToGCB(ext->ByteCount, (const GifByteType*)ext->Bytes, &GCB);
+            }
             // gif->SWidth is not neccesarily the same as FrameInfo->Width due to a frame possibly describing a smaller block of pixels than the entire gif size
-            
+        
             UnityEngine::Texture2D* texture = UnityEngine::Texture2D::New_ctor(width, height);
             // This is the same size as the entire size of the gif :)
             // offset into the entire image, might need to also have it's y value flipped? need to test
@@ -179,6 +199,7 @@ struct Gif
                     {
                         continue;
                     }
+                    // TODO: Don't draw transparent pixels
 
                     color = &colorMap->Colors[frame->RasterBits[loc]];
                     // for now we just use this method to determine where to draw on the image, we will probably come across a better way though
@@ -190,17 +211,16 @@ struct Gif
             texture->SetAllPixels32(pixelData, 0);
             texture->Apply();
 
-            getLogger().debug("Finished frame: %d", idx);
-            if (texture == nullptr) {
-                getLogger().debug("%d null", idx-1);
-            } else {
-                getLogger().debug("%d not null", idx-1);
-            }
-            frames[idx-1] = texture;
+            frames[idx] = texture;
+            timings[idx] = static_cast<float>(GCB.DelayTime);
+            
         };
         getLogger().debug("Finished everything: ");
-        return frames;
+        return {
+            frames, timings
+        };
     }
+    
 
     int get_width() { return gif ? gif->SWidth : 0; };
     int get_height() { return gif ? gif->SHeight : 0; };
