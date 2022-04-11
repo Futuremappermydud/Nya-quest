@@ -13,6 +13,7 @@ DECLARE_CLASS_CODEGEN(Nya, ImageView, UnityEngine::MonoBehaviour,
     DECLARE_INSTANCE_METHOD(void, Update);
     DECLARE_INSTANCE_METHOD(void, UpdateImage, ArrayW<UnityEngine::Texture2D*> frames, ArrayW<float> timings , float ImageWidth, float ImageHeight);
     DECLARE_INSTANCE_METHOD(void, UpdateStaticImage, UnityEngine::Sprite* image);
+    DECLARE_INSTANCE_METHOD(void, cleanupTextures);
     
     DECLARE_CTOR(ctor);
     DECLARE_SIMPLE_DTOR();

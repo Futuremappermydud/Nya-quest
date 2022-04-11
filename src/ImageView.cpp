@@ -38,8 +38,6 @@ void Nya::ImageView::Update()
     int length = animationFrames.Length();
     if (length > 0)
     {
-      // Destroy old stuff
-
       float deltaTime = Time::get_deltaTime();
 
       bool isFrameNeeded = false;
@@ -56,15 +54,29 @@ void Nya::ImageView::Update()
           frameTime = frameTime - frameLength;
           frameLength = animationTimings[currentFrame] / 100;
         }
+      } else {
+        // Skip the frame with 0 ms
+        currentFrame = (currentFrame + 1) % length;
+        isFrameNeeded = true;
+        frameLength = animationTimings[currentFrame] / 100;
       }
 
       if (isFrameNeeded)
       {
-        Destroy(imageView->get_sprite());
-        auto sprite = Sprite::Create(animationFrames.get(currentFrame),
+        auto old_sprite = imageView->get_sprite();
+        if (old_sprite != nullptr) {
+          
+          Destroy(old_sprite);
+        }
+        if (animationFrames.Length() > currentFrame) {
+          auto frame = animationFrames.get(currentFrame);
+          if (frame !=nullptr) {
+            auto sprite = Sprite::Create(frame,
                                      Rect(0.0f, 0.0f, (float)width, (float)height),
                                      Vector2(0.5f, 0.5f), 1024.0f, 1u, SpriteMeshType::FullRect, Vector4(0.0f, 0.0f, 0.0f, 0.0f), false);
-        imageView->set_sprite(sprite);
+            imageView->set_sprite(sprite);
+          }
+        }
       }
       frameTime += deltaTime;
     }
@@ -74,18 +86,42 @@ void Nya::ImageView::Update()
 // Update
 void Nya::ImageView::UpdateImage(ArrayW<UnityEngine::Texture2D *> frames, ArrayW<float> timings, float ImageWidth, float ImageHeight)
 {
-  // stop gif playback
-  play = false;
-
-  // get refs fot cleanup
-  auto oldFrames = animationFrames;
-  UnityEngine::Sprite *oldSprite = imageView->get_sprite();
-  UnityEngine::Texture2D *oldTexture = nullptr;
-  if (oldSprite != nullptr)
-  {
-    oldTexture = oldSprite->get_texture();
+  // Check for nulls
+  if (!frames) {
+    il2cpp_utils::getLogger().warning("Frames are null, skipping");
+    return;
+  }
+  if (!timings) {
+    il2cpp_utils::getLogger().warning("Timings are null, skipping");
+    return;
   }
 
+  // CHECK if the gif has zero timings to prevent infinite loop
+  float total_length = 0.0f;
+  for (int i = 0; i < timings.Length(); i++)
+  {
+      total_length += timings[i];
+  }
+  if (total_length == 0) {
+    il2cpp_utils::getLogger().warning("Gif has zero timings for some reason, skipping...");
+    return;
+  }
+
+  // Validate width and height
+  if (!(ImageWidth > 0 && ImageHeight > 0)) {
+    il2cpp_utils::getLogger().warning("Timings are null, skipping");
+    return;
+  }
+  
+  // Clean things
+  cleanupTextures();
+  
+  // stop gif playback
+  il2cpp_utils::getLogger().debug("Stopping playing");
+  play = false;
+  currentFrame = 0;
+  
+ 
   // Update variables
   animationFrames = frames;
   animationTimings = timings;
@@ -94,30 +130,6 @@ void Nya::ImageView::UpdateImage(ArrayW<UnityEngine::Texture2D *> frames, ArrayW
   width = ImageWidth;
   height = ImageHeight;
 
-  // Cleanup
-  if (oldTexture != nullptr)
-  {
-    Destroy(oldTexture);
-  }
-  if (oldSprite != nullptr)
-  {
-    Destroy(oldSprite);
-  }
-  // Clear all previous textures
-  if (oldFrames)
-  {
-    int length = oldFrames.Length();
-    // TODO: memory cleanup
-    for (int i = 0; i < length; i++)
-    {
-      auto frame = oldFrames[i];
-      if (frame != nullptr)
-      {
-        Destroy(frame);
-      }
-    }
-  }
-
   // Start playback
   play = true;
 }
@@ -125,10 +137,14 @@ void Nya::ImageView::UpdateImage(ArrayW<UnityEngine::Texture2D *> frames, ArrayW
 // Set normal image
 void Nya::ImageView::UpdateStaticImage(UnityEngine::Sprite *image)
 {
-  // Stop gifs
   play = false;
+  cleanupTextures();
+  currentFrame = 0;
+  imageView->set_sprite(image);
+}
 
-  // Prepare stuff for clean
+
+void Nya::ImageView::cleanupTextures(){
   auto oldFrames = animationFrames;
   UnityEngine::Sprite *oldSprite = imageView->get_sprite();
   UnityEngine::Texture2D *oldTexture = nullptr;
@@ -137,20 +153,14 @@ void Nya::ImageView::UpdateStaticImage(UnityEngine::Sprite *image)
     oldTexture = oldSprite->get_texture();
   }
 
-  
-  currentFrame = 0;
-  
-  imageView->set_sprite(image);
-  
-  
-  // Clean
+  // Cleanup
   if (oldTexture != nullptr)
   {
-    Destroy(oldTexture);
+    oldTexture = nullptr;
   }
   if (oldSprite != nullptr)
   {
-    Destroy(oldSprite);
+    UnityEngine::Object::Destroy(oldSprite);
   }
   // Clear all previous textures
   if (oldFrames)
@@ -162,7 +172,7 @@ void Nya::ImageView::UpdateStaticImage(UnityEngine::Sprite *image)
       auto frame = oldFrames[i];
       if (frame != nullptr)
       {
-        Destroy(frame);
+        UnityEngine::Object::Destroy(frame);
       }
     }
   }
