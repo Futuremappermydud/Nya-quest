@@ -188,24 +188,29 @@ struct Gif
             UnityEngine::Texture2D* texture = UnityEngine::Texture2D::New_ctor(width, height);
             // This is the same size as the entire size of the gif :)
             // offset into the entire image, might need to also have it's y value flipped? need to test
-            long pixelDataOffset = frameInfo->Top * width + frameInfo->Left;
+            long flippedFrameTop = height - frameInfo->Top - frameInfo->Height;
+            long pixelDataOffset = flippedFrameTop * width + frameInfo->Left;
             // it's easier to understand iteration from 0 -> value, than it is to understand value -> value
             for (y = 0; y < frameInfo->Height; ++y)
             {
                 for (x = 0; x < frameInfo->Width; ++x)
                 {
-                    loc = y * frameInfo->Width + x;
+                    // Weirdness here is to flip Y coordinate
+                    loc = ( frameInfo->Height-y-1 ) * frameInfo->Width + x;
+                    // Checks if the pixel is transparent
                     if (frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0])
                     {
                         continue;
                     }
-                    // TODO: Don't draw transparent pixels
 
                     color = &colorMap->Colors[frame->RasterBits[loc]];
                     // for now we just use this method to determine where to draw on the image, we will probably come across a better way though
-                    long locWithinFrame = (frameInfo->Height - y - 1) * frameInfo->Width + x + pixelDataOffset;
+                    long locWithinFrame = x + pixelDataOffset;
                     pixelData.get(locWithinFrame) = UnityEngine::Color32(color->Red, color->Green, color->Blue, 0xff);
                 }
+
+                // Goes to a new row (saves compute power)
+                pixelDataOffset = pixelDataOffset + width;
             }
 
             texture->SetAllPixels32(pixelData, 0);
