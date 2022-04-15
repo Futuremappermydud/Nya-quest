@@ -198,7 +198,7 @@ struct Gif
                     // Weirdness here is to flip Y coordinate
                     loc = ( frameInfo->Height-y-1 ) * frameInfo->Width + x;
                     // Checks if the pixel is transparent
-                    if (frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0])
+                    if (GCB.TransparentColor >=0 && frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0])
                     {
                         continue;
                     }
