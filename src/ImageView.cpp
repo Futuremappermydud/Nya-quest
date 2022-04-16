@@ -63,6 +63,11 @@ void Nya::ImageView::Update()
 
       if (isFrameNeeded)
       {
+        if (imageView == nullptr) {
+          il2cpp_utils::getLogger().warning("imageView is null");
+          imageView = this->get_gameObject()->GetComponent<HMUI::ImageView *>();
+        }
+
         auto old_sprite = imageView->get_sprite();
         if (old_sprite != nullptr) {
           
@@ -115,7 +120,7 @@ void Nya::ImageView::UpdateImage(ArrayW<UnityEngine::Texture2D *> frames, ArrayW
   
   // Clean things
   cleanupTextures();
-  
+
   // stop gif playback
   il2cpp_utils::getLogger().debug("Stopping playing");
   play = false;
@@ -176,4 +181,10 @@ void Nya::ImageView::cleanupTextures(){
       }
     }
   }
+}
+
+
+void Nya::ImageView::dtor(){
+  il2cpp_utils::getLogger().debug("Destruct");
+  cleanupTextures();
 }

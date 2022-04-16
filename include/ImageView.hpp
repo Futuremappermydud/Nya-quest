@@ -16,7 +16,7 @@ DECLARE_CLASS_CODEGEN(Nya, ImageView, UnityEngine::MonoBehaviour,
     DECLARE_INSTANCE_METHOD(void, cleanupTextures);
     
     DECLARE_CTOR(ctor);
-    DECLARE_SIMPLE_DTOR();
+    DECLARE_DTOR(dtor);
 
     DECLARE_INSTANCE_FIELD(float, floatVar);
     DECLARE_INSTANCE_FIELD(int, currentFrame);
