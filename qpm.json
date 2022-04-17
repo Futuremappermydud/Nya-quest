@@ -13,7 +13,7 @@
   "dependencies": [
     {
       "id": "beatsaber-hook",
-      "versionRange": "=3.6.8",
+      "versionRange": "=3.8.1",
       "additionalData": {
         "extraFiles": [
           "src/inline-hook"
@@ -50,6 +50,11 @@
     {
       "id": "config-utils",
       "versionRange": "^0.7.2",
+      "additionalData": {}
+    },
+    {
+      "id": "gif-lib",
+      "versionRange": "^5.2.2",
       "additionalData": {}
     }
   ],
