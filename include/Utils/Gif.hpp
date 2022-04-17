@@ -4,11 +4,22 @@
 #include <sstream>
 #include "UnityEngine/Texture2D.hpp"
 #include "UnityEngine/Color32.hpp"
+#include "UnityEngine/TextureWrapMode.hpp"
+#include "UnityEngine/FilterMode.hpp"
 
 struct AllFramesResult {
     ArrayW<UnityEngine::Texture2D*>  frames;
     ArrayW<float> timings;
 };
+
+// raw PVRTC bytes for Unity
+struct TextureColor {
+    uint8_t Red;
+    uint8_t Green;
+    uint8_t Blue;
+    uint8_t Transparency;
+};
+
 struct Gif
 {
     Gif(std::string& text) : data(text), datastream(&this->data){};
@@ -121,7 +132,7 @@ struct Gif
         return texture;
     }
     
-/// @brief gets the frame @ idx
+    /// @brief gets the frame @ idx
     /// @return texture2d or nullptr on fail
     AllFramesResult get_all_frames()
     {
@@ -140,10 +151,8 @@ struct Gif
         ::ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(length);
         ArrayW<float> timings = ArrayW<float> (length);
 
-        // Basic texture
-        UnityEngine::Texture2D* sampleTexture = UnityEngine::Texture2D::New_ctor(width, height);
-        ::ArrayW<::UnityEngine::Color32> pixelData = sampleTexture->GetPixels32();
-        UnityEngine::Object::Destroy(sampleTexture);
+        // FrameBuffer
+        TextureColor *pixelData = new TextureColor[width * height];
         // IDX <= length
 
         // Persist data from the previous frame
@@ -185,7 +194,7 @@ struct Gif
             }
             // gif->SWidth is not neccesarily the same as FrameInfo->Width due to a frame possibly describing a smaller block of pixels than the entire gif size
         
-            UnityEngine::Texture2D* texture = UnityEngine::Texture2D::New_ctor(width, height);
+            UnityEngine::Texture2D* texture = UnityEngine::Texture2D::New_ctor(width, height, UnityEngine::TextureFormat::RGBA32, false);
             // This is the same size as the entire size of the gif :)
             // offset into the entire image, might need to also have it's y value flipped? need to test
             long flippedFrameTop = height - frameInfo->Top - frameInfo->Height;
@@ -206,20 +215,28 @@ struct Gif
                     color = &colorMap->Colors[frame->RasterBits[loc]];
                     // for now we just use this method to determine where to draw on the image, we will probably come across a better way though
                     long locWithinFrame = x + pixelDataOffset;
-                    pixelData.get(locWithinFrame) = UnityEngine::Color32(color->Red, color->Green, color->Blue, 0xff);
+                    pixelData[locWithinFrame] = {
+                        color->Red, color->Green, color->Blue, 0xff
+                    };
                 }
 
                 // Goes to a new row (saves compute power)
                 pixelDataOffset = pixelDataOffset + width;
             }
 
-            texture->SetAllPixels32(pixelData, 0);
+            // Copy raw pixel data to texture
+            texture->LoadRawTextureData(pixelData,  width * height * 4);
+            // texture->set_filterMode(UnityEngine::FilterMode::Trilinear);
+            // Compress texture
+            texture->Compress(false);
+            // Upload to GPU
             texture->Apply();
 
             frames[idx] = texture;
-            timings[idx] = static_cast<float>(GCB.DelayTime);
-            
+            timings[idx] = static_cast<float>(GCB.DelayTime);        
         };
+        // Clear FrameBuffer to not leak things
+        delete[] pixelData;
         getLogger().debug("Finished everything: ");
         return {
             frames, timings

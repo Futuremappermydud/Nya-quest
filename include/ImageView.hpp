@@ -7,6 +7,9 @@
 #include "UnityEngine/MonoBehaviour.hpp"
 #include "HMUI/ImageView.hpp"
 #include "UnityEngine/Texture2D.hpp"
+#include "UnityEngine/CanvasRenderer.hpp"
+#include "UnityEngine/Renderer.hpp"
+#include "UnityEngine/Material.hpp"
 
 DECLARE_CLASS_CODEGEN(Nya, ImageView, UnityEngine::MonoBehaviour,
   public:
@@ -29,6 +32,7 @@ DECLARE_CLASS_CODEGEN(Nya, ImageView, UnityEngine::MonoBehaviour,
 
     DECLARE_INSTANCE_FIELD(HMUI::ImageView*, imageView);
     DECLARE_INSTANCE_FIELD(UnityEngine::Texture2D*, texture);
+    DECLARE_INSTANCE_FIELD(UnityEngine::CanvasRenderer*, canvasRenderer);
     DECLARE_INSTANCE_FIELD(ArrayW<UnityEngine::Texture2D*>, animationFrames);
     DECLARE_INSTANCE_FIELD(ArrayW<float>, animationTimings);
 )

@@ -67,19 +67,15 @@ void Nya::ImageView::Update()
           il2cpp_utils::getLogger().warning("imageView is null");
           imageView = this->get_gameObject()->GetComponent<HMUI::ImageView *>();
         }
-
-        auto old_sprite = imageView->get_sprite();
-        if (old_sprite != nullptr) {
-          
-          Destroy(old_sprite);
-        }
         if (animationFrames.Length() > currentFrame) {
           auto frame = animationFrames.get(currentFrame);
+          
           if (frame !=nullptr) {
-            auto sprite = Sprite::Create(frame,
-                                     Rect(0.0f, 0.0f, (float)width, (float)height),
-                                     Vector2(0.5f, 0.5f), 1024.0f, 1u, SpriteMeshType::FullRect, Vector4(0.0f, 0.0f, 0.0f, 0.0f), false);
-            imageView->set_sprite(sprite);
+            if (this->canvasRenderer == nullptr) {
+              il2cpp_utils::getLogger().warning("sprite renderer is null");
+            } else {
+              canvasRenderer->SetTexture(frame);
+            }
           }
         }
       }
@@ -98,6 +94,10 @@ void Nya::ImageView::UpdateImage(ArrayW<UnityEngine::Texture2D *> frames, ArrayW
   }
   if (!timings) {
     il2cpp_utils::getLogger().warning("Timings are null, skipping");
+    return;
+  }
+  if (frames.Length() < 1) {
+    il2cpp_utils::getLogger().warning("Zero frames, skipping");
     return;
   }
 
@@ -122,7 +122,6 @@ void Nya::ImageView::UpdateImage(ArrayW<UnityEngine::Texture2D *> frames, ArrayW
   cleanupTextures();
 
   // stop gif playback
-  il2cpp_utils::getLogger().debug("Stopping playing");
   play = false;
   currentFrame = 0;
   
@@ -135,6 +134,16 @@ void Nya::ImageView::UpdateImage(ArrayW<UnityEngine::Texture2D *> frames, ArrayW
   width = ImageWidth;
   height = ImageHeight;
 
+
+  // Create a sprite with new dimensions with first frame
+  auto sprite = Sprite::Create(animationFrames[0],
+    Rect(0.0f, 0.0f, (float)width, (float)height),
+    Vector2(0.5f, 0.5f), 1024.0f, 1u, SpriteMeshType::FullRect, Vector4(0.0f, 0.0f, 0.0f, 0.0f), false);
+  
+  imageView->set_sprite(sprite);
+
+  // Get canvas renderer reference
+  this->canvasRenderer = this->imageView->get_canvasRenderer();
   // Start playback
   play = true;
 }
@@ -171,7 +180,6 @@ void Nya::ImageView::cleanupTextures(){
   if (oldFrames)
   {
     int length = oldFrames.Length();
-    // TODO: memory cleanup
     for (int i = 0; i < length; i++)
     {
       auto frame = oldFrames[i];
@@ -185,6 +193,5 @@ void Nya::ImageView::cleanupTextures(){
 
 
 void Nya::ImageView::dtor(){
-  il2cpp_utils::getLogger().debug("Destruct");
   cleanupTextures();
 }
